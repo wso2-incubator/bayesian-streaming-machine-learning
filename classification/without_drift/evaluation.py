@@ -15,6 +15,7 @@ Copyright 2018 Nadheesh Jihan
 """
 
 import os
+import time
 
 import numpy as np
 import pandas as pd
@@ -28,7 +29,6 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.utils import shuffle
-
 from submission.classification.benchmark.arow import M_AROW, AROW
 # Dependency imports
 from submission.classification.model.bayesian_classification1 import BayesianClassifier
@@ -70,8 +70,8 @@ def category_to_int(df, columns):
 
 
 def load_20news(num_features, random_state):
-    news_train = fetch_20newsgroups(subset="train", data_home='../../../data/classification/')
-    news_test = fetch_20newsgroups(subset="test", data_home='../../../data/classification/')
+    news_train = fetch_20newsgroups(subset="train", data_home=news_dir)
+    news_test = fetch_20newsgroups(subset="test", data_home=news_dir)
 
     train_data = news_train.data
     train_target = news_train.target.astype(np.int32)
@@ -89,10 +89,10 @@ def load_20news(num_features, random_state):
 
 
 def load_product_type_dataset(random_state):
-    pt_data = pd.read_csv("../../../data/classification/product_type/train.csv")
+    pt_data = pd.read_csv("%s/train.csv" % products_dir)
 
     data, target = pt_data.ix[:, :-1].values, pt_data.ix[:, -1].astype('category').cat.codes.values
-    data, target = shuffle(data, target, random_state=42)
+    data, target = shuffle(data, target, random_state=random_state)
 
     # additional column to represent the intercept
     data = np.append(data, np.ones((data.shape[0], 1)), axis=1)
@@ -105,7 +105,7 @@ def load_product_type_dataset(random_state):
 
 
 def load_mnist(file_name, random_state):
-    mnist = pd.read_csv("../../../data/classification/mnist/%s" % file_name)
+    mnist = pd.read_csv("%s/%s" % (mnist_dir, file_name))
 
     data, target = mnist.ix[:, 1:].values, mnist.ix[:, 0].values
     data, target = shuffle(data, target, random_state=random_state)
@@ -157,7 +157,8 @@ def run_exp(outpath, random_states, datasets, model_list, alphas=None, proportio
             elif dataset == "product_type":
                 data = load_product_type_dataset(random_state)
             else:
-                raise Exception("Dataset %s is not found" % dataset)
+                raise Exception(
+                    "Dataset %s is not found. Download data from google drive. Set the correct path to data" % dataset)
 
             train_data, train_target, test_data, test_target = data
             if proportion is not None:
@@ -341,47 +342,6 @@ def run_exp(outpath, random_states, datasets, model_list, alphas=None, proportio
 
                 print("Accuracy of %s : %f" % (model, acc))
 
-            # # plot error counts
-            # show = False
-            # for model in models:
-            #     x = range(0, n)
-            #     plt.plot(x, error_arr[model], label=model)
-            # plt.legend(loc=0)
-            # if show:
-            #     plt.show()
-            #
-            # # plot error rate
-            # for model in models:
-            #     x = range(0, n)
-            #     n_arr = np.arange(1, n + 1).astype(np.float32)
-            #     plt.plot(x, error_arr[model] / n_arr, label=model)
-            # plt.legend(loc=0)
-            # if show:
-            #     plt.show()
-            #
-            # plot likelihood
-            # for model in loglik_arr:
-            #     x = range(0, n, stat_interval)
-            #     plt.plot(x, loglik_arr[model], label=model)
-            # plt.legend(loc=0)
-            # plt.show()
-            #
-            # # plot loss
-            # for model in loss_arr:
-            #     x = range(0, n)
-            #     plt.plot(x, loss_arr[model], label=model)
-            # plt.legend(loc=0)
-            # if show:
-            #     plt.show()
-            #
-            # # plot loss
-            # for model in kl_arr:
-            #     x = range(0, n)
-            #     plt.plot(x, kl_arr[model], label=model)
-            # plt.legend(loc=0)
-            # if show:
-            #     plt.show()
-
             final_stats = {
                 "accuracy": final_acc_arr,
                 "likelihood": loglik_arr,
@@ -397,18 +357,19 @@ if __name__ == '__main__':
     batch_size = 1
     stat_interval = 50
 
-    import time
+    # dataset paths.
+    # download data using the google drive links
+    news_dir = '../../../data/classification/'
+    mnist_dir = '../../../data/classification/mnist'
+    products_dir = '../../../data/classification/product_type'
 
-    id = time.time()
+    models = ["SSVB"]
+    datasets = ["product_type"]  # ["product_type", "mnist", "20news"]
+    random_states = [42, 19, 7, 13, 25]
 
-    models = [ "SSVB"]
-    datasets = ["mnist"]
-    random_states = [42]
-
-    # 1e5, 1e6, 1e7
-    scales = None
-    proportion = None
-    run_exp("dump_mnist_improved", random_states, datasets, models, scales, proportion)
+    alphas = [1e5]  # for PVI only [1e5, 1e6, 1e7]
+    proportion = None  # to optimize alpha
+    run_exp("stats", random_states, datasets, models, alphas, proportion)
 
     # run_exp("all", random_states, datasets, models)
 

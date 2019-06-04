@@ -245,7 +245,7 @@ if __name__ == '__main__':
             x = np.linspace(mu_min - 3 * sigma, mu_max + 3 * sigma, 1000)
 
             mu, sigma = svi_loc[i], svi_scale[i]
-            ax.plot(x, mlab.normpdf(x, mu, sigma), label="BB-SVI", c="#ff7f0e")
+            ax.plot(x, mlab.normpdf(x, mu, sigma), label="SVI", c="#ff7f0e")
 
             # ax = axes[1][i]
             mu, sigma = svb_loc[i], svb_scale[i]
