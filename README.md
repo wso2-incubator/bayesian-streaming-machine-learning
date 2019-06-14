@@ -6,3 +6,5 @@ Contains three experiment scripts
 - SSVB for classification (vs SVB, SVI and PVI)
 - SSVB for linear mixed-effects models (vs SVB, SVI and PVI)
 
+Publications
+- (pre-print) https://peerj.com/preprints/27790/
